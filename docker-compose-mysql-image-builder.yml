@@ -1,0 +1,20 @@
+version: '2'
+
+####
+#### this docker-compose includes a plain mysql an a flyway container to push petclinic data into it
+####
+
+services:
+   mysql:
+     image: mysql:5.7
+     environment:
+       MYSQL_ROOT_PASSWORD: mysql
+       MYSQL_DATABASE: petclinic
+
+   flyway:
+     depends_on:
+       - mysql
+     volumes:
+       - ./build/flyway_migrations:/flyway/sql
+     image: shouldbee/flyway
+     command: -url=jdbc:mysql://mysql/petclinic -user=root -password=mysql migrate
