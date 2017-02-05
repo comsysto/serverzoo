@@ -24,4 +24,4 @@ docker stop petclinic-db-init
 # process if migration files haven't changed:
 docker cp petclinic-db-init:/var/lib/mysql ./build/docker/mysql-data
 cp Dockerfile-db build/docker/Dockerfile
-docker build -t close2infinity/petclinicdb:MD5_$(<build/distributions/spring-petclinic-1.4.2-migration.zip.MD5) build/docker
+docker build -t comsysto/petclinicdb:MD5_$(<build/distributions/spring-petclinic-1.4.2-migration.zip.MD5) build/docker
