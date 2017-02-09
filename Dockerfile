@@ -1,3 +1,7 @@
+####
+#### this Dockerfile is used to build the image that runs the petclinic app
+####
+
 FROM anapsix/alpine-java:latest
 WORKDIR /opt/petclinic
 ADD build/petclinic-example/target/spring-petclinic-1.5.1.jar .
