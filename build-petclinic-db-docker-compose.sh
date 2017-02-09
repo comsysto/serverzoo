@@ -5,9 +5,11 @@
 ####
 
 DB_IMAGE_NAME=comsysto/petclinic-db
-TMP_DATA_DIR=build/docker/mysql-data
+BUILD_DIR=build/docker
+TMP_DATA_DIR=mysql-data
+TMP_DATA_PATH_IN_BUILD_DIR=${BUILD_DIR}/${TMP_DATA_DIR}
 
-mkdir -p ${TMP_DATA_DIR}
+mkdir -p ${TMP_DATA_PATH_IN_BUILD_DIR}
 
 # start up the database
 docker-compose --file docker-compose-mysql-image-builder.yml up -d mysql
@@ -25,9 +27,9 @@ docker-compose --file docker-compose-mysql-image-builder.yml stop
 # is ignored - therefore we use cp. The image is tagged with the MD5 checksum
 # of the migration files, so we may skip the whole process if migration files
 # haven't changed:
-docker cp `docker-compose --file docker-compose-mysql-image-builder.yml ps -q mysql`:/var/lib/mysql ${TMP_DATA_DIR}
-cp Dockerfile-db build/docker/Dockerfile
-docker build -t ${DB_IMAGE_NAME}:latest -t ${DB_IMAGE_NAME}:MD5_$(<build/distributions/spring-petclinic-1.5.1-migration.zip.MD5) build/docker
+docker cp `docker-compose --file docker-compose-mysql-image-builder.yml ps -q mysql`:/var/lib/mysql ${TMP_DATA_PATH_IN_BUILD_DIR}
+cp Dockerfile-db ${BUILD_DIR}/Dockerfile
+docker build --build-arg data_directory=${TMP_DATA_DIR} -t ${DB_IMAGE_NAME}:latest -t ${DB_IMAGE_NAME}:MD5_$(<build/distributions/spring-petclinic-1.5.1-migration.zip.MD5) ${BUILD_DIR}
 
 # clean up everything
 docker-compose --file docker-compose-mysql-image-builder.yml rm -f
