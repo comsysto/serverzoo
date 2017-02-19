@@ -1,8 +1,12 @@
 version: '2'
 
+####
+#### this docker-compose can be used to start the petclinic with a prepared mysql including corresponding data
+####
+
 services:
    db:
-     image: petclinic-db
+     image: comsysto/petclinic-db
 
    petclinic:
      depends_on:
