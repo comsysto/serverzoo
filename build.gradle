@@ -1,31 +1,21 @@
 apply plugin: 'maven'
-apply plugin: 'java'
-
 group = 'org.springframework.samples'
 version = '1.5.1'
 
 description = """petclinic"""
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 task getPetClinic(type: Exec) {
   description 'Checkout or update the Spring Petclinic example from GitHub'
 
-  if (new File("${project.APP_DIR}/.git").exists()) {
-    workingDir "${project.APP_DIR}"
-    commandLine 'git', 'pull', 'origin'
+  doFirst {
+    if (file("${project.APP_DIR}/.git").exists()) {
+      println "${project.APP_DIR}/.git exists. Updating..."
+      workingDir "${project.APP_DIR}"
+      commandLine 'git', 'pull', 'origin'
+    } else {
+      commandLine 'git', 'clone', 'https://github.com/spring-projects/spring-petclinic.git', "${project.APP_DIR}"
+    }
   }
-  else {
-    commandLine 'git', 'clone', 'https://github.com/spring-projects/spring-petclinic.git', "${project.APP_DIR}"
-  }
-}
-
-task mavenBuild(type: Exec, dependsOn: getPetClinic) {
-  description 'Builds and installs the project using Maven'
-
-  workingDir "${project.APP_DIR}"
-  commandLine 'mvn', 'install', '-U', '-DskipTests', '-DskipITs'
 }
 
 task copyMigrationSources(type: Copy, dependsOn: getPetClinic) {
@@ -85,20 +75,21 @@ task createPetclinic(type: Exec, dependsOn: [build, createPetclinicDb]) {
   commandLine 'docker-compose', 'build', '--no-cache'
 }
 
-build.dependsOn(mavenBuild)
+task mavenBuild(type: Exec, dependsOn: getPetClinic) {
+  description 'Builds and installs the project using Maven'
 
-test {
-  exclude '**'
+  workingDir "${project.APP_DIR}"
+  commandLine 'mvn', 'install', '-U', '-DskipTests', '-DskipITs'
 }
 
-task mavenTest(type: Exec) {
+build.dependsOn(mavenBuild)
+
+task test(type: Exec, dependsOn: mavenBuild) {
   description 'Runs Petclinic tests using Maven'
 
   workingDir "${project.APP_DIR}"
   commandLine 'mvn', 'test'
 }
-
-test.dependsOn(mavenTest)
 
 task run(type: Exec, dependsOn: createPetclinic) {
   description 'Runs the Petclinic service'
@@ -114,26 +105,4 @@ task bundle(type: Exec, dependsOn: createPetclinic) {
 
 repositories {
   maven { url "http://repo.maven.apache.org/maven2" }
-}
-
-dependencies {
-  compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: SPRING_BOOT_VERSION
-  compile group: 'org.springframework.boot', name: 'spring-boot-starter-cache', version: SPRING_BOOT_VERSION
-  compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: SPRING_BOOT_VERSION
-  compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: SPRING_BOOT_VERSION
-  compile(group: 'org.springframework.boot', name: 'spring-boot-starter-thymeleaf', version: SPRING_BOOT_VERSION) {
-    exclude(module: 'groovy')
-  }
-  compile group: 'javax.cache', name: 'cache-api', version: '1.0.0'
-  compile group: 'org.ehcache', name: 'ehcache', version: '3.1.3'
-  compile group: 'org.webjars', name: 'webjars-locator', version: '0.32'
-  compile group: 'org.webjars', name: 'jquery', version: '2.2.4'
-  compile group: 'org.webjars', name: 'jquery-ui', version: '1.11.4'
-  compile group: 'org.webjars', name: 'bootstrap', version: '3.3.6'
-  runtime group: 'org.hsqldb', name: 'hsqldb', version: '2.3.3'
-  runtime group: 'mysql', name: 'mysql-connector-java', version: '5.1.40'
-  runtime group: 'org.springframework.boot', name: 'spring-boot-devtools', version: SPRING_BOOT_VERSION
-  testCompile(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: SPRING_BOOT_VERSION) {
-    exclude(module: 'commons-logging')
-  }
 }
